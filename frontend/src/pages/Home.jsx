@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { axiosInstance } from '../axiosCalls/axios'
+import { useAuth } from '../context/AuthContext'
 
 function Home() {
   const navigate = useNavigate()
-  const [customer, setCustomer] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { user: authUser, logout } = useAuth()
+  const [customer, setCustomer] = useState(authUser || null)
+  const [loading, setLoading] = useState(!authUser)
 
   useEffect(() => {
     const fetchCustomerProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:8001/api/customers/me', {
-          withCredentials: true
-        })
+        const response = await axiosInstance.get('api/customers/me')
         setCustomer(response.data)
       } catch (err) {
         navigate('/login')
@@ -26,11 +26,7 @@ function Home() {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        'http://localhost:8001/api/customers/logout',
-        {},
-        { withCredentials: true }
-      )
+      await logout()
     } catch (err) {
       console.error(err)
     } finally {
@@ -42,18 +38,18 @@ function Home() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-9 h-9 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-xs font-medium text-gray-400">Loading Shopkart...</p>
+          <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm font-medium text-gray-500">Loading your profile...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col antialiased">
+    <div className="min-h-screen bg-slate-50 text-gray-900 flex flex-col antialiased">
       
       {/* Navigation Header */}
-      <header className="w-full bg-white border-b border-gray-100 sticky top-0 z-50">
+      <header className="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
           
           {/* Brand Logo */}
@@ -64,9 +60,12 @@ function Home() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-10 text-sm font-medium text-gray-600">
+          <nav className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-600">
             <a href="#shop" className="text-gray-900 font-semibold hover:text-black transition">
               Shop
+            </a>
+            <a href="#profile" className="hover:text-black transition">
+              Profile
             </a>
             <a href="#new-arrivals" className="hover:text-black transition">
               New Arrivals
@@ -74,17 +73,14 @@ function Home() {
             <a href="#best-sellers" className="hover:text-black transition">
               Best Sellers
             </a>
-            <a href="#contact" className="hover:text-black transition">
-              Contact
-            </a>
           </nav>
 
           {/* Right Controls */}
           <div className="flex items-center space-x-4">
             
-            {/* Logged in User Pill + RED Logout Button */}
+            {/* Logged in User Pill + Logout Button */}
             {customer && (
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200/80 pl-3 pr-1 py-1 rounded-full text-xs font-medium text-gray-700 shadow-sm">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 pl-3 pr-1 py-1 rounded-full text-xs font-medium text-gray-700 shadow-sm">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span className="font-semibold text-gray-800">{customer.fullName}</span>
                 <button
@@ -98,18 +94,11 @@ function Home() {
             )}
 
             {/* Profile Icon */}
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer" title="Profile">
+            <a href="#profile" className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer" title="Profile">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-            </button>
-
-            {/* Share / Wishlist */}
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer hidden sm:block" title="Wishlist">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </button>
+            </a>
 
             {/* Shopping Cart */}
             <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer relative" title="Cart">
@@ -124,9 +113,99 @@ function Home() {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-10">
         
-        {/* Hero Section matching the image */}
+        {/* User Profile Block & Welcome Section */}
+        {customer && (
+          <section id="profile" className="bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-8 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              
+              {/* Left Side: Avatar & Details */}
+              <div className="flex items-start sm:items-center gap-5">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-md shadow-indigo-500/20 shrink-0">
+                  {customer.fullName ? customer.fullName.charAt(0).toUpperCase() : 'U'}
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                      Active Member
+                    </span>
+                    <span className="text-xs text-gray-400">Verified Customer</span>
+                  </div>
+
+                  {/* Welcome Message */}
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                    Welcome back, {customer.fullName}!
+                  </h1>
+                  <p className="text-sm text-gray-500">
+                    Manage your account details and view your orders from your dashboard.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Side: Quick Action Button */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl border border-red-200/80 transition cursor-pointer flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+
+            </div>
+
+            {/* Customer Information Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+              
+              {/* Full Name */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-gray-100 flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-gray-500">Customer Name</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{customer.fullName}</p>
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-gray-100 flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-gray-500">Email Address</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{customer.email}</p>
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div className="bg-slate-50 rounded-2xl p-4 border border-gray-100 flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-gray-500">Phone Number</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{customer.phone || 'N/A'}</p>
+                </div>
+              </div>
+
+            </div>
+          </section>
+        )}
+
+        {/* Hero Section */}
         <section id="shop" className="bg-[#ededed] rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-2 items-center min-h-[420px] shadow-sm">
           
           {/* Left Text Column */}
@@ -157,7 +236,7 @@ function Home() {
 
         </section>
 
-        {/* Features 3-Pillar Bar with clean icons */}
+        {/* Features 3-Pillar Bar */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-y border-gray-200">
           
           {/* Free Shipping */}

@@ -80,7 +80,7 @@ export const loginCustomer = async (req, res) => {
         if (!customer) {
             return res.status(401).json({
                 success: false,
-                message: "Invalid credentials"
+                message: "User not registered"
             })
         }
 

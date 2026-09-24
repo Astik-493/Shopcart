@@ -12,7 +12,7 @@ export const protectRoute = async (req, res, next) => {
             })
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'shopkart_secret_key_12345')
+        const decoded = jwt.verify(token, process.env.JWT_SECRET )
         if (!decoded || !decoded.id) {
             return res.status(401).json({
                 success: false,
