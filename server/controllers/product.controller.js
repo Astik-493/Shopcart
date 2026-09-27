@@ -1,10 +1,10 @@
+import mongoose from 'mongoose'
 import Product from '../models/product.model.js'
 
 export const createProduct = async (req, res) => {
     try {
         const { name, description, price, category, image, stock } = req.body
 
-        // Check for missing required fields
         if (!name || !description || price === undefined || price === null || !category || !image || stock === undefined || stock === null) {
             return res.status(400).json({
                 success: false,
@@ -12,7 +12,6 @@ export const createProduct = async (req, res) => {
             })
         }
 
-        // Validate price
         if (typeof price !== 'number' || price <= 0) {
             return res.status(400).json({
                 success: false,
@@ -20,7 +19,6 @@ export const createProduct = async (req, res) => {
             })
         }
 
-        // Validate stock
         if (typeof stock !== 'number' || stock < 0) {
             return res.status(400).json({
                 success: false,
@@ -28,7 +26,6 @@ export const createProduct = async (req, res) => {
             })
         }
 
-        // Create product in MongoDB using existing Product model
         const product = await Product.create({
             name,
             description,
@@ -48,6 +45,75 @@ export const createProduct = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: error.message
+            })
+        }
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        })
+    }
+}
+
+export const getAllProducts = async (req, res) => {
+    try {
+        const { search, category } = req.query
+        const query = {}
+
+        // Filter by name (case-insensitive search)
+        if (search && search.trim()) {
+            query.name = { $regex: search.trim(), $options: 'i' }
+        }
+
+        // Filter by category
+        if (category && category.trim()) {
+            query.category = { $regex: `^${category.trim()}$`, $options: 'i' }
+        }
+
+        const products = await Product.find(query).select('_id name price category image stock')
+
+        return res.status(200).json({
+            success: true,
+            count: products.length,
+            products
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        })
+    }
+}
+
+export const getProductById = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        // Check if ID is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid product ID format"
+            })
+        }
+
+        const product = await Product.findById(id)
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            product
+        })
+    } catch (error) {
+        if (error.name === 'CastError') {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid product ID format"
             })
         }
         return res.status(500).json({

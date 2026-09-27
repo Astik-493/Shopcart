@@ -1,9 +1,10 @@
 import express from 'express'
-import { createProduct } from '../controllers/product.controller.js'
+import { createProduct, getAllProducts, getProductById } from '../controllers/product.controller.js'
 
 const router = express.Router()
 
-// Open route for product creation
 router.post('/', createProduct)
+router.get('/', getAllProducts)
+router.get('/:id', getProductById)
 
 export default router

@@ -29,6 +29,7 @@ app.use('/api/customers', customerRoutes)
 app.use('/api/products', productRoutes)
 app.use('/products', productRoutes)
 
+
 mongoose.connect(process.env.dbUrl)
     .then(() => {
         console.log('DB Connected')
