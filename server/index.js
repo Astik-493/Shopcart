@@ -2,6 +2,7 @@ import express from 'express'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
 import customerRoutes from './routes/customer.routes.js'
+import productRoutes from './routes/product.routes.js'
 import cookieParser from 'cookie-parser'
 
 dotenv.config()
@@ -25,6 +26,8 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use('/api/customers', customerRoutes)
+app.use('/api/products', productRoutes)
+app.use('/products', productRoutes)
 
 mongoose.connect(process.env.dbUrl)
     .then(() => {
