@@ -6,6 +6,7 @@ import PublicRoute from './components/PublicRoute'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Products from './pages/Products'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/products" element={<Products />} />
           </Route>
 
           {/* Fallback route */}

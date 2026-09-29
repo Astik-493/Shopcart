@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 
@@ -53,17 +53,17 @@ function Home() {
         <div className="max-w-6xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
           
           {/* Brand Logo */}
-          <div className="flex items-center gap-2">
+          <Link to="/home" className="flex items-center gap-2">
             <span className="text-2xl font-bold tracking-tight text-gray-900 font-serif">
               Shopkart
             </span>
-          </div>
+          </Link>
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-10 text-sm font-medium text-gray-600">
-            <a href="#shop" className="text-gray-900 font-semibold hover:text-black transition">
-              Shop
-            </a>
+            <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
+              Products
+            </Link>
             <a href="#new-arrivals" className="hover:text-black transition">
               New Arrivals
             </a>
@@ -127,9 +127,12 @@ function Home() {
               Shop the latest trends & exclusive offers
             </p>
             <div className="pt-2">
-              <button className="px-9 py-3.5 bg-[#e86638] hover:bg-[#d6572a] text-white font-semibold rounded-lg shadow-sm hover:shadow transition active:scale-95 cursor-pointer text-sm sm:text-base">
+              <Link
+                to="/products"
+                className="inline-block px-9 py-3.5 bg-[#e86638] hover:bg-[#d6572a] text-white font-semibold rounded-lg shadow-sm hover:shadow transition active:scale-95 cursor-pointer text-sm sm:text-base"
+              >
                 Shop Now
-              </button>
+              </Link>
             </div>
           </div>
 
