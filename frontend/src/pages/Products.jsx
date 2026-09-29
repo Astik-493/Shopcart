@@ -11,7 +11,19 @@ function Products() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Fetch logged in customer if not in context
+  // Search & Category states
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('')
+
+  const categories = [
+    'All Categories',
+    'Electronics',
+    'Fashion',
+    'Books',
+    'Home'
+  ]
+
+  // Fetch logged in customer profile if not in context
   useEffect(() => {
     if (!customer) {
       const fetchCustomerProfile = async () => {
@@ -19,20 +31,33 @@ function Products() {
           const response = await axiosInstance.get('api/customers/me')
           setCustomer(response.data)
         } catch (err) {
-          // If unauthorized, the route guard handles redirection
+          // Unauthenticated requests handled by route guard
         }
       }
       fetchCustomerProfile()
     }
   }, [customer])
 
-  // Fetch products from backend API
+  // Fetch products with dynamic query parameters
   const fetchProducts = async () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await axiosInstance.get('products')
-      // API returns { success: true, count: N, products: [...] }
+      const params = new URLSearchParams()
+
+      if (search.trim()) {
+        params.append('search', search.trim())
+      }
+
+      if (category && category !== 'All Categories') {
+        params.append('category', category)
+      }
+
+      const queryString = params.toString()
+      const endpoint = queryString ? `products?${queryString}` : 'products'
+
+      const response = await axiosInstance.get(endpoint)
+
       if (response.data && Array.isArray(response.data.products)) {
         setProducts(response.data.products)
       } else if (Array.isArray(response.data)) {
@@ -48,9 +73,10 @@ function Products() {
     }
   }
 
+  // Trigger search / filter whenever search input or selected category changes
   useEffect(() => {
     fetchProducts()
-  }, [])
+  }, [search, category])
 
   const handleLogout = async () => {
     try {
@@ -123,34 +149,119 @@ function Products() {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
         
-        {/* Page Banner / Header */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-2">
-              <span>Catalog</span>
-              <span>•</span>
-              <span>{products.length} Products Found</span>
+        {/* Page Banner & Search / Filter Controls */}
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-sm space-y-6">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold mb-2">
+                <span>Catalog</span>
+                <span>•</span>
+                <span>{products.length} {products.length === 1 ? 'Product' : 'Products'} Found</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                Explore Our Products
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Browse and filter our latest curated collection.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
-              Explore Our Products
-            </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Browse the latest curated collection of high-quality items.
-            </p>
+
+            <button
+              onClick={fetchProducts}
+              className="self-start sm:self-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-2"
+              title="Refresh Products"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Refresh</span>
+            </button>
           </div>
 
-          <button
-            onClick={fetchProducts}
-            className="self-start sm:self-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition cursor-pointer flex items-center gap-2"
-            title="Refresh Products"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>Refresh</span>
-          </button>
+          {/* Search Bar & Category Dropdown Section */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 pt-4 border-t border-gray-100">
+            
+            {/* Search Input */}
+            <div className="md:col-span-8 relative flex items-center">
+              <span className="absolute left-4 text-gray-400 pointer-events-none flex items-center">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-12 pr-10 py-3 bg-slate-50 border border-gray-200 rounded-2xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition shadow-sm"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  aria-label="Clear search"
+                  className="absolute right-3.5 p-1 text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* Category Dropdown */}
+            <div className="md:col-span-4 relative flex items-center">
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-50 border border-gray-200 rounded-2xl text-sm text-gray-900 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition shadow-sm cursor-pointer appearance-none"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat === 'All Categories' ? '' : cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <span className="absolute right-4 text-gray-400 pointer-events-none flex items-center">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </div>
+
+          </div>
+
+          {/* Active Filter Pills (if any) */}
+          {(search || (category && category !== 'All Categories')) && (
+            <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
+              <span className="text-gray-400 font-medium">Active filters:</span>
+              {search && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-200/60 font-medium">
+                  Query: "{search}"
+                  <button onClick={() => setSearch('')} className="hover:text-blue-900 font-bold ml-0.5">×</button>
+                </span>
+              )}
+              {category && category !== 'All Categories' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 rounded-full border border-purple-200/60 font-medium">
+                  Category: {category}
+                  <button onClick={() => setCategory('')} className="hover:text-purple-900 font-bold ml-0.5">×</button>
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  setSearch('')
+                  setCategory('')
+                }}
+                className="text-xs text-red-600 hover:text-red-700 hover:underline font-semibold ml-2"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
         </div>
 
         {/* Loading State */}
@@ -158,7 +269,7 @@ function Products() {
           <div className="min-h-[350px] flex items-center justify-center bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm">
             <div className="text-center">
               <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-600">Loading products from catalog...</p>
+              <p className="text-sm font-medium text-gray-600">Filtering products...</p>
             </div>
           </div>
         )}
@@ -193,8 +304,21 @@ function Products() {
             <div>
               <h2 className="text-lg font-bold text-gray-900">No products available</h2>
               <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
-                There are currently no products listed in the catalog. Please check back later.
+                {search || category
+                  ? `No items matched your search criteria. Try modifying your search or category filter.`
+                  : `There are currently no products listed in the catalog. Please check back later.`}
               </p>
+              {(search || category) && (
+                <button
+                  onClick={() => {
+                    setSearch('')
+                    setCategory('')
+                  }}
+                  className="mt-4 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 font-semibold text-xs rounded-xl transition"
+                >
+                  Reset Filters
+                </button>
+              )}
             </div>
           </div>
         )}
