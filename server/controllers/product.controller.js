@@ -56,7 +56,7 @@ export const createProduct = async (req, res) => {
 
 export const getAllProducts = async (req, res) => {
     try {
-        const { search, category } = req.query
+        const { search, category, sort } = req.query
         const query = {}
 
         // Filter by name (case-insensitive search)
@@ -69,7 +69,16 @@ export const getAllProducts = async (req, res) => {
             query.category = { $regex: `^${category.trim()}$`, $options: 'i' }
         }
 
-        const products = await Product.find(query).select('_id name price category image stock')
+        let productQuery = Product.find(query).select('_id name price category image stock')
+
+        // Apply price sorting if specified
+        if (sort === 'price_asc') {
+            productQuery = productQuery.sort({ price: 1 })
+        } else if (sort === 'price_desc') {
+            productQuery = productQuery.sort({ price: -1 })
+        }
+
+        const products = await productQuery
 
         return res.status(200).json({
             success: true,
