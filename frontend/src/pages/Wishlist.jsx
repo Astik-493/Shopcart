@@ -269,7 +269,7 @@ function Wishlist() {
           <div className="min-h-[350px] flex items-center justify-center bg-white rounded-3xl border border-gray-200/80 p-8 shadow-sm">
             <div className="text-center">
               <div className="w-10 h-10 border-4 border-gray-200 border-t-rose-600 rounded-full animate-spin mx-auto mb-3" />
-              <p className="text-sm font-medium text-gray-600">Loading wishlist...</p>
+              <p className="text-sm font-medium text-gray-600">Loading your wishlist...</p>
             </div>
           </div>
         )}
@@ -282,8 +282,10 @@ function Wishlist() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h2 className="text-base font-bold text-red-900">Failed to Load Wishlist</h2>
-            <p className="text-sm text-red-600 max-w-md mx-auto">{error}</p>
+            <h2 className="text-base font-bold text-red-900">Unable to load wishlist.</h2>
+            {error && typeof error === 'string' && error !== 'Unable to load wishlist.' && (
+              <p className="text-xs text-red-600 max-w-md mx-auto">{error}</p>
+            )}
             <button
               onClick={fetchWishlist}
               className="mt-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl transition shadow-sm cursor-pointer"
@@ -302,21 +304,21 @@ function Wishlist() {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">No products in your wishlist.</h2>
+              <h2 className="text-lg font-bold text-gray-900">Your wishlist is empty ❤️</h2>
               <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
-                Explore our catalog to add items you love to your wishlist.
+                Start saving products you love.
               </p>
               <Link
                 to="/products"
                 className="inline-block mt-4 px-5 py-2.5 bg-slate-900 hover:bg-black text-white font-semibold text-xs rounded-xl transition shadow-sm"
               >
-                Explore Products
+                Browse Products
               </Link>
             </div>
           </div>
         )}
 
-        {/* Dynamic Wishlist Grid */}
+        {/* Success State - Dynamic Wishlist Grid */}
         {!loading && !error && wishlist.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlist.map((product) => (
