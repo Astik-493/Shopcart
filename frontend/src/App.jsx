@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Products from './pages/Products'
 import ProductDetails from './pages/ProductDetails'
+import Wishlist from './pages/Wishlist'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/products/:id" element={<ProductDetails />} />
+            <Route path="/wishlist" element={<Wishlist />} />
           </Route>
 
           {/* Fallback route */}

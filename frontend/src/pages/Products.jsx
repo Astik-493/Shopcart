@@ -3,6 +3,143 @@ import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 
+function ProductCard({ product }) {
+  const [saving, setSaving] = useState(false)
+  const [added, setAdded] = useState(false)
+  const [error, setError] = useState('')
+
+  const inStock = product.stock > 0
+
+  const handleAddToWishlist = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (saving || added) return
+
+    setSaving(true)
+    setError('')
+
+    try {
+      const response = await axiosInstance.post(`wishlist/${product._id}`)
+      if (response.data && response.data.success) {
+        setAdded(true)
+      }
+    } catch (err) {
+      console.error('Wishlist error:', err)
+      if (err.response && err.response.status === 409) {
+        setAdded(true)
+        setError('Product is already in your wishlist')
+      } else if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message)
+      } else {
+        setError('Failed to add product to wishlist.')
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div
+      key={product._id}
+      className="group bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition duration-200 flex flex-col justify-between"
+    >
+      {/* Card Top: Image & Badges */}
+      <div>
+        <div className="relative w-full h-52 bg-gray-100 overflow-hidden">
+          <img
+            src={product.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop'}
+            alt={product.name}
+            onError={(e) => {
+              e.target.onerror = null
+              e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop'
+            }}
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-300 ease-out"
+          />
+
+          {/* Category Badge */}
+          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-semibold text-gray-700 shadow-sm border border-white/60">
+            {product.category || 'General'}
+          </span>
+
+          {/* Stock Status Badge */}
+          <span
+            className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[11px] font-semibold shadow-sm backdrop-blur-md ${
+              inStock
+                ? 'bg-emerald-500/90 text-white'
+                : 'bg-rose-500/90 text-white'
+            }`}
+          >
+            {inStock ? `In Stock (${product.stock})` : 'Out of Stock'}
+          </span>
+        </div>
+
+        {/* Card Body: Name & Price */}
+        <div className="p-5 space-y-2">
+          <h3
+            className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-blue-600 transition"
+            title={product.name}
+          >
+            {product.name}
+          </h3>
+
+          <div className="flex items-baseline justify-between pt-1">
+            <div>
+              <span className="text-xs text-gray-400">Price</span>
+              <p className="text-lg font-extrabold text-gray-900">
+                ₹{Number(product.price).toLocaleString()}
+              </p>
+            </div>
+            <span className="text-xs font-medium text-gray-400">
+              Qty: {product.stock}
+            </span>
+          </div>
+
+          {/* Error message if any */}
+          {error && (
+            <p className="text-xs text-rose-600 font-medium pt-1">
+              {error}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Card Bottom: Action Buttons */}
+      <div className="p-5 pt-0 space-y-2">
+        {/* Add to Wishlist Action Button */}
+        <button
+          type="button"
+          onClick={handleAddToWishlist}
+          disabled={saving || added}
+          className={`w-full py-2.5 px-4 font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-1.5 shadow-sm ${
+            added
+              ? 'bg-rose-50 text-rose-600 border border-rose-200 cursor-default'
+              : saving
+              ? 'bg-slate-100 text-slate-500 cursor-not-allowed border border-slate-200'
+              : 'bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200/90 cursor-pointer active:scale-95'
+          }`}
+        >
+          <span>
+            {saving ? '⏳ Saving...' : added ? '♥ Added to Wishlist' : '♡ Add to Wishlist'}
+          </span>
+        </button>
+
+        {/* View Details Action Button */}
+        <Link
+          to={`/products/${product._id}`}
+          className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-2 shadow-sm hover:shadow cursor-pointer active:scale-95"
+        >
+          <span>View Details</span>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
+      </div>
+
+    </div>
+  )
+}
+
 function Products() {
   const navigate = useNavigate()
   const { user: authUser, logout } = useAuth()
@@ -114,6 +251,9 @@ function Products() {
             </Link>
             <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
               Products
+            </Link>
+            <Link to="/wishlist" className="hover:text-black transition">
+              Wishlist
             </Link>
             <a href="#categories" className="hover:text-black transition">
               Categories
@@ -308,83 +448,9 @@ function Products() {
         {/* Dynamic Product Grid */}
         {!loading && !error && products.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => {
-              const inStock = product.stock > 0
-
-              return (
-                <div
-                  key={product._id}
-                  className="group bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition duration-200 flex flex-col justify-between"
-                >
-                  {/* Card Top: Image & Badges */}
-                  <div>
-                    <div className="relative w-full h-52 bg-gray-100 overflow-hidden">
-                      <img
-                        src={product.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop'}
-                        alt={product.name}
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop'
-                        }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300 ease-out"
-                      />
-
-                      {/* Category Badge */}
-                      <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-semibold text-gray-700 shadow-sm border border-white/60">
-                        {product.category || 'General'}
-                      </span>
-
-                      {/* Stock Status Badge */}
-                      <span
-                        className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[11px] font-semibold shadow-sm backdrop-blur-md ${
-                          inStock
-                            ? 'bg-emerald-500/90 text-white'
-                            : 'bg-rose-500/90 text-white'
-                        }`}
-                      >
-                        {inStock ? `In Stock (${product.stock})` : 'Out of Stock'}
-                      </span>
-                    </div>
-
-                    {/* Card Body: Name & Price */}
-                    <div className="p-5 space-y-2">
-                      <h3
-                        className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-blue-600 transition"
-                        title={product.name}
-                      >
-                        {product.name}
-                      </h3>
-
-                      <div className="flex items-baseline justify-between pt-1">
-                        <div>
-                          <span className="text-xs text-gray-400">Price</span>
-                          <p className="text-lg font-extrabold text-gray-900">
-                            ₹{Number(product.price).toLocaleString()}
-                          </p>
-                        </div>
-                        <span className="text-xs font-medium text-gray-400">
-                          Qty: {product.stock}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Bottom: View Details Action Button */}
-                  <div className="p-5 pt-0">
-                    <Link
-                      to={`/products/${product._id}`}
-                      className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-2 shadow-sm hover:shadow cursor-pointer active:scale-95"
-                    >
-                      <span>View Details</span>
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </Link>
-                  </div>
-
-                </div>
-              )
-            })}
+            {products.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
           </div>
         )}
 

@@ -64,6 +64,9 @@ function Home() {
             <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
               Products
             </Link>
+            <Link to="/wishlist" className="hover:text-black transition">
+              Wishlist
+            </Link>
             <a href="#new-arrivals" className="hover:text-black transition">
               New Arrivals
             </a>
