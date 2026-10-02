@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
+import { useWishlist } from '../context/WishlistContext'
 
 function Home() {
   const navigate = useNavigate()
   const { user: authUser, logout } = useAuth()
+  const { wishlistCount } = useWishlist()
   const [customer, setCustomer] = useState(authUser || null)
   const [loading, setLoading] = useState(!authUser)
 
@@ -64,9 +66,6 @@ function Home() {
             <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
               Products
             </Link>
-            <Link to="/wishlist" className="hover:text-black transition">
-              Wishlist
-            </Link>
             <a href="#new-arrivals" className="hover:text-black transition">
               New Arrivals
             </a>
@@ -102,6 +101,25 @@ function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </button>
+
+            {/* Wishlist Heart Icon + Badge + Tooltip */}
+            <Link
+              to="/wishlist"
+              className="relative p-2 hover:bg-rose-50 text-gray-700 hover:text-rose-600 rounded-full transition cursor-pointer group"
+              title="Wishlist"
+              aria-label="Wishlist"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                {wishlistCount}
+              </span>
+              {/* Hover Tooltip */}
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                Wishlist
+              </span>
+            </Link>
 
             {/* Shopping Cart */}
             <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer relative" title="Cart">

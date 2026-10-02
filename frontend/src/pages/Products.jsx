@@ -2,37 +2,57 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
+import { useWishlist } from '../context/WishlistContext'
 
-function ProductCard({ product }) {
+function ProductCard({ product, initialSaved = false }) {
+  const { addToWishlistContext, removeFromWishlistContext } = useWishlist()
   const [saving, setSaving] = useState(false)
-  const [added, setAdded] = useState(false)
+  const [isSaved, setIsSaved] = useState(initialSaved)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    setIsSaved(initialSaved)
+  }, [initialSaved])
 
   const inStock = product.stock > 0
 
-  const handleAddToWishlist = async (e) => {
+  const handleToggleWishlist = async (e) => {
     e.preventDefault()
     e.stopPropagation()
 
-    if (saving || added) return
+    if (saving) return
 
     setSaving(true)
     setError('')
 
     try {
-      const response = await axiosInstance.post(`wishlist/${product._id}`)
-      if (response.data && response.data.success) {
-        setAdded(true)
+      if (!isSaved) {
+        // Product is NOT saved -> Add to wishlist
+        const response = await axiosInstance.post(`wishlist/${product._id}`)
+        if (response.data && response.data.success) {
+          setIsSaved(true)
+          addToWishlistContext(product._id)
+        }
+      } else {
+        // Product IS saved -> Remove from wishlist
+        const response = await axiosInstance.delete(`wishlist/${product._id}`)
+        if (response.data && response.data.success) {
+          setIsSaved(false)
+          removeFromWishlistContext(product._id)
+        }
       }
     } catch (err) {
-      console.error('Wishlist error:', err)
+      console.error('Wishlist toggle error:', err)
       if (err.response && err.response.status === 409) {
-        setAdded(true)
-        setError('Product is already in your wishlist')
+        setIsSaved(true)
+        addToWishlistContext(product._id)
+      } else if (err.response && err.response.status === 404) {
+        setIsSaved(false)
+        removeFromWishlistContext(product._id)
       } else if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message)
       } else {
-        setError('Failed to add product to wishlist.')
+        setError(isSaved ? 'Failed to remove from wishlist.' : 'Failed to add to wishlist.')
       }
     } finally {
       setSaving(false)
@@ -106,21 +126,25 @@ function ProductCard({ product }) {
 
       {/* Card Bottom: Action Buttons */}
       <div className="p-5 pt-0 space-y-2">
-        {/* Add to Wishlist Action Button */}
+        {/* Wishlist Toggle Action Button */}
         <button
           type="button"
-          onClick={handleAddToWishlist}
-          disabled={saving || added}
-          className={`w-full py-2.5 px-4 font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-1.5 shadow-sm ${
-            added
-              ? 'bg-rose-50 text-rose-600 border border-rose-200 cursor-default'
-              : saving
-              ? 'bg-slate-100 text-slate-500 cursor-not-allowed border border-slate-200'
-              : 'bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200/90 cursor-pointer active:scale-95'
+          onClick={handleToggleWishlist}
+          disabled={saving}
+          className={`w-full py-2.5 px-4 font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-1.5 shadow-sm border ${
+            saving
+              ? 'bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed'
+              : isSaved
+              ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/90 cursor-pointer active:scale-95'
+              : 'bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border-slate-200/90 cursor-pointer active:scale-95'
           }`}
         >
           <span>
-            {saving ? '⏳ Saving...' : added ? '♥ Added to Wishlist' : '♡ Add to Wishlist'}
+            {saving
+              ? '⏳ Updating...'
+              : isSaved
+              ? '♥ Remove from Wishlist'
+              : '♡ Add to Wishlist'}
           </span>
         </button>
 
@@ -143,6 +167,7 @@ function ProductCard({ product }) {
 function Products() {
   const navigate = useNavigate()
   const { user: authUser, logout } = useAuth()
+  const { wishlistCount, wishlistIds } = useWishlist()
   const [customer, setCustomer] = useState(authUser || null)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -252,9 +277,6 @@ function Products() {
             <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
               Products
             </Link>
-            <Link to="/wishlist" className="hover:text-black transition">
-              Wishlist
-            </Link>
             <a href="#categories" className="hover:text-black transition">
               Categories
             </a>
@@ -280,6 +302,25 @@ function Products() {
                 </button>
               </div>
             )}
+
+            {/* Wishlist Heart Icon + Badge + Tooltip */}
+            <Link
+              to="/wishlist"
+              className="relative p-2 hover:bg-rose-50 text-gray-700 hover:text-rose-600 rounded-full transition cursor-pointer group"
+              title="Wishlist"
+              aria-label="Wishlist"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                {wishlistCount}
+              </span>
+              {/* Hover Tooltip */}
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                Wishlist
+              </span>
+            </Link>
 
             {/* Shopping Cart Icon */}
             <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer relative" title="Cart">
@@ -449,7 +490,11 @@ function Products() {
         {!loading && !error && products.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
+              <ProductCard
+                key={product._id}
+                product={product}
+                initialSaved={wishlistIds.has(product._id)}
+              />
             ))}
           </div>
         )}
