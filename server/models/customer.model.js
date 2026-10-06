@@ -27,6 +27,22 @@ const customerSchema = new mongoose.Schema({
             }
         ],
         default: []
+    },
+    cart: {
+        type: [
+            {
+                product: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Product"
+                },
+                quantity: {
+                    type: Number,
+                    required: true,
+                    min: 1
+                }
+            }
+        ],
+        default: []
     }
 }, {
     timestamps: true
