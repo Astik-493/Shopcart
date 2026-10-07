@@ -3,13 +3,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
 
 function Home() {
   const navigate = useNavigate()
   const { user: authUser, logout } = useAuth()
   const { wishlistCount } = useWishlist()
+  const { cartItems } = useCart()
   const [customer, setCustomer] = useState(authUser || null)
   const [loading, setLoading] = useState(!authUser)
+
+  const cartCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0)
 
   useEffect(() => {
     const fetchCustomerProfile = async () => {
@@ -121,12 +125,22 @@ function Home() {
               </span>
             </Link>
 
-            {/* Shopping Cart */}
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer relative" title="Cart">
+            {/* Shopping Cart Icon + Badge + Tooltip */}
+            <button
+              className="relative p-2 hover:bg-blue-50 text-gray-700 hover:text-blue-600 rounded-full transition cursor-pointer group"
+              title="Cart"
+              aria-label="Cart"
+            >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full ring-2 ring-white" />
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                {cartCount}
+              </span>
+              {/* Hover Tooltip */}
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                Cart ({cartCount})
+              </span>
             </button>
 
           </div>

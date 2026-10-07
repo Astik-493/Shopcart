@@ -3,10 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
 
 function ProductCard({ product, initialSaved = false }) {
   const { addToWishlistContext, removeFromWishlistContext } = useWishlist()
+  const { cartItems, addToCart } = useCart()
   const [saving, setSaving] = useState(false)
+  const [addingToCart, setAddingToCart] = useState(false)
   const [isSaved, setIsSaved] = useState(initialSaved)
   const [error, setError] = useState('')
 
@@ -15,6 +18,34 @@ function ProductCard({ product, initialSaved = false }) {
   }, [initialSaved])
 
   const inStock = product.stock > 0
+
+  // Check if product is already in the global cart
+  const cartItem = cartItems.find(
+    (item) => (item.product?._id || item.product)?.toString() === product._id?.toString()
+  )
+  const isInCart = Boolean(cartItem)
+  const cartQuantity = cartItem?.quantity || 0
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (addingToCart || !inStock) return
+
+    setAddingToCart(true)
+    setError('')
+
+    try {
+      await addToCart(product._id)
+    } catch (err) {
+      console.error('Add to cart error:', err)
+      const message =
+        err.response?.data?.message || err.message || 'Failed to add product to cart.'
+      setError(message)
+    } finally {
+      setAddingToCart(false)
+    }
+  }
 
   const handleToggleWishlist = async (e) => {
     e.preventDefault()
@@ -126,6 +157,43 @@ function ProductCard({ product, initialSaved = false }) {
 
       {/* Card Bottom: Action Buttons */}
       <div className="p-5 pt-0 space-y-2">
+        {/* Add to Cart Action Button */}
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          disabled={addingToCart || !inStock}
+          className={`w-full py-2.5 px-4 font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-1.5 shadow-sm border ${
+            !inStock
+              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+              : addingToCart
+              ? 'bg-blue-50 text-blue-500 border-blue-200 cursor-not-allowed'
+              : isInCart
+              ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 cursor-pointer active:scale-95'
+              : 'bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer active:scale-95'
+          }`}
+        >
+          {addingToCart ? (
+            <>
+              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              <span>Adding...</span>
+            </>
+          ) : !inStock ? (
+            <span>Out of Stock</span>
+          ) : isInCart ? (
+            <span>+ Add Another ({cartQuantity} in Cart)</span>
+          ) : (
+            <>
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Add to Cart</span>
+            </>
+          )}
+        </button>
+
         {/* Wishlist Toggle Action Button */}
         <button
           type="button"
@@ -168,10 +236,13 @@ function Products() {
   const navigate = useNavigate()
   const { user: authUser, logout } = useAuth()
   const { wishlistCount, wishlistIds } = useWishlist()
+  const { cartItems } = useCart()
   const [customer, setCustomer] = useState(authUser || null)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const cartCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0)
 
   // Search, Category & Sort states
   const [search, setSearch] = useState('')
@@ -322,12 +393,22 @@ function Products() {
               </span>
             </Link>
 
-            {/* Shopping Cart Icon */}
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer relative" title="Cart">
+            {/* Shopping Cart Icon + Badge + Tooltip */}
+            <button
+              className="relative p-2 hover:bg-blue-50 text-gray-700 hover:text-blue-600 rounded-full transition cursor-pointer group"
+              title="Cart"
+              aria-label="Cart"
+            >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full ring-2 ring-white" />
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                {cartCount}
+              </span>
+              {/* Hover Tooltip */}
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                Cart ({cartCount})
+              </span>
             </button>
 
           </div>
