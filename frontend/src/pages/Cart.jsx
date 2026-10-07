@@ -4,6 +4,7 @@ import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
+import Navbar from '../components/Navbar'
 
 function Cart() {
   const navigate = useNavigate()
@@ -95,89 +96,7 @@ function Cart() {
     <div className="min-h-screen bg-slate-50 text-gray-900 flex flex-col antialiased font-sans">
       
       {/* Navigation Header */}
-      <header className="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
-          
-          {/* Brand Logo */}
-          <Link to="/home" className="flex items-center gap-2">
-            <span className="text-2xl font-bold tracking-tight text-gray-900 font-serif">
-              Shopkart
-            </span>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-10 text-sm font-medium text-gray-600">
-            <Link to="/home" className="hover:text-black transition">
-              Home
-            </Link>
-            <Link to="/products" className="hover:text-black transition">
-              Products
-            </Link>
-            <Link to="/wishlist" className="hover:text-black transition">
-              Wishlist
-            </Link>
-            <Link to="/cart" className="text-gray-900 font-semibold hover:text-black transition">
-              Cart ({totalUnits})
-            </Link>
-          </nav>
-
-          {/* Right Controls */}
-          <div className="flex items-center space-x-4">
-            
-            {/* Logged in User Pill + Logout Button */}
-            {customer && (
-              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200/80 pl-3 pr-1 py-1 rounded-full text-xs font-medium text-gray-700 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="font-semibold text-gray-800">{customer.fullName}</span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-500 hover:bg-red-600 text-white font-semibold px-2.5 py-1 rounded-full transition text-[11px] shadow-sm hover:shadow active:scale-95 cursor-pointer ml-1"
-                  title="Logout"
-                >
-                  Logout
-                </button>
-              </div>
-            )}
-
-            {/* Wishlist Heart Icon + Badge */}
-            <Link
-              to="/wishlist"
-              className="relative p-2 hover:bg-rose-50 text-gray-700 hover:text-rose-600 rounded-full transition cursor-pointer group"
-              title="Wishlist"
-              aria-label="Wishlist"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
-                {wishlistCount}
-              </span>
-              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
-                Wishlist
-              </span>
-            </Link>
-
-            {/* Shopping Cart Icon + Badge */}
-            <Link
-              to="/cart"
-              className="relative p-2 bg-blue-50 text-blue-600 rounded-full transition cursor-pointer group"
-              title="Cart"
-              aria-label="Cart"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
-                {totalUnits}
-              </span>
-              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
-                Cart ({totalUnits})
-              </span>
-            </Link>
-
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content Area */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6">
