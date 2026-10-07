@@ -16,6 +16,10 @@ function Navbar() {
 
   const cartCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0)
 
+  // Determine username and initial dynamically from user object
+  const username = user?.username || user?.fullName || (user?.email ? user.email.split('@')[0] : 'User')
+  const initial = (username.trim().charAt(0) || 'U').toUpperCase()
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -38,34 +42,49 @@ function Navbar() {
     }
   }
 
+  const handleScrollToSection = (sectionId) => {
+    if (location.pathname === '/' || location.pathname === '/home') {
+      const el = document.getElementById(sectionId)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' })
+      }
+    } else {
+      navigate(`/home#${sectionId}`)
+    }
+  }
+
   const isHomeActive = location.pathname === '/' || location.pathname === '/home'
   const isProductsActive = location.pathname === '/products'
 
   return (
-    <header className="w-full bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header className="w-full bg-white/95 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-50 shadow-2xs transition duration-200">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
         
-        {/* Brand Logo & Navigation Links */}
-        <div className="flex items-center space-x-8 sm:space-x-10">
+        {/* Left Section: Brand Logo & Main Navigation Links */}
+        <div className="flex items-center space-x-6 sm:space-x-8 shrink-0">
           <Link to="/home" className="flex items-center gap-2 group">
             <span className="text-2xl font-bold tracking-tight text-gray-900 font-serif group-hover:text-blue-600 transition">
               Shopkart
             </span>
           </Link>
 
-          <nav className="flex items-center space-x-6 sm:space-x-8 text-sm font-medium text-gray-600">
+          <nav className="flex items-center space-x-1 sm:space-x-2 text-sm font-medium">
             <Link
               to="/home"
-              className={`transition hover:text-black ${
-                isHomeActive ? 'text-gray-900 font-bold' : 'text-gray-600'
+              className={`px-3 py-1.5 rounded-xl transition ${
+                isHomeActive
+                  ? 'text-gray-900 font-bold bg-gray-100/90 shadow-2xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               Home
             </Link>
             <Link
               to="/products"
-              className={`transition hover:text-black ${
-                isProductsActive ? 'text-gray-900 font-bold' : 'text-gray-600'
+              className={`px-3 py-1.5 rounded-xl transition ${
+                isProductsActive
+                  ? 'text-gray-900 font-bold bg-gray-100/90 shadow-2xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}
             >
               Products
@@ -73,21 +92,68 @@ function Navbar() {
           </nav>
         </div>
 
-        {/* Right Controls: Account Dropdown, Wishlist Icon, Cart Icon */}
-        <div className="flex items-center space-x-3 sm:space-x-4">
+        {/* Middle Section: Clean, Compact Quick Links */}
+        <div className="hidden md:flex items-center space-x-1 lg:space-x-2 text-xs font-medium text-gray-600">
+          <Link
+            to="/home"
+            className="px-2.5 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-100 transition duration-150 flex items-center gap-1.5 group"
+            title="Curated for You"
+          >
+            <span className="text-blue-600 group-hover:rotate-12 transition-transform duration-300">✦</span>
+            <span>Curated for You</span>
+          </Link>
+
+          <span className="text-gray-300 select-none">•</span>
+
+          <Link
+            to="/products"
+            className="px-2.5 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-100 transition duration-150"
+            title="New Arrivals"
+          >
+            New Arrivals
+          </Link>
+
+          <span className="text-gray-300 select-none">•</span>
+
+          <button
+            type="button"
+            onClick={() => handleScrollToSection('trending-now')}
+            className="px-2.5 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-100 transition duration-150 cursor-pointer"
+            title="Trending Now"
+          >
+            Trending
+          </button>
+
+          <span className="text-gray-300 select-none">•</span>
+
+          <button
+            type="button"
+            onClick={() => handleScrollToSection('best-sellers')}
+            className="px-2.5 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-100 transition duration-150 cursor-pointer"
+            title="Best Sellers"
+          >
+            Best Sellers
+          </button>
+        </div>
+
+        {/* Right Section: Account Dropdown, Wishlist Icon, Cart Icon */}
+        <div className="flex items-center space-x-2.5 sm:space-x-3.5 shrink-0">
           
           {/* Account Dropdown */}
-          {user && (
+          {user ? (
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200/90 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-800 transition shadow-sm hover:shadow cursor-pointer active:scale-95"
+                className="flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200/90 pl-1.5 pr-3 py-1.5 rounded-full text-xs font-semibold text-gray-800 transition shadow-2xs hover:shadow-xs cursor-pointer active:scale-95"
                 aria-expanded={dropdownOpen}
                 aria-haspopup="true"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="max-w-[120px] truncate">{user.fullName || 'Account'}</span>
+                {/* Circular Initial Avatar */}
+                <span className="w-6 h-6 rounded-full bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0 uppercase shadow-2xs">
+                  {initial}
+                </span>
+                <span className="max-w-[100px] sm:max-w-[120px] truncate">{username}</span>
                 <svg
                   className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${
                     dropdownOpen ? 'rotate-180' : ''
@@ -113,7 +179,7 @@ function Navbar() {
                   <div className="px-4 py-3 space-y-2.5 text-xs">
                     <div>
                       <span className="text-[10px] text-gray-400 uppercase font-semibold block">Username</span>
-                      <p className="font-semibold text-gray-800 break-words">{user.fullName || '—'}</p>
+                      <p className="font-semibold text-gray-800 break-words">{username}</p>
                     </div>
 
                     <div>
@@ -142,6 +208,13 @@ function Navbar() {
                 </div>
               )}
             </div>
+          ) : (
+            <Link
+              to="/login"
+              className="px-3.5 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-full transition shadow-xs"
+            >
+              Login
+            </Link>
           )}
 
           {/* Wishlist Heart Icon + Badge + Tooltip */}

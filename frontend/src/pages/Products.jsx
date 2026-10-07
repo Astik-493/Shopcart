@@ -1,240 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import Navbar from '../components/Navbar'
-
-function ProductCard({ product, initialSaved = false }) {
-  const { addToWishlistContext, removeFromWishlistContext } = useWishlist()
-  const { cartItems, addToCart } = useCart()
-  const [saving, setSaving] = useState(false)
-  const [addingToCart, setAddingToCart] = useState(false)
-  const [isSaved, setIsSaved] = useState(initialSaved)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    setIsSaved(initialSaved)
-  }, [initialSaved])
-
-  const inStock = product.stock > 0
-
-  // Check if product is already in the global cart
-  const cartItem = cartItems.find(
-    (item) => (item.product?._id || item.product)?.toString() === product._id?.toString()
-  )
-  const isInCart = Boolean(cartItem)
-  const cartQuantity = cartItem?.quantity || 0
-
-  const handleAddToCart = async (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (addingToCart || !inStock) return
-
-    setAddingToCart(true)
-    setError('')
-
-    try {
-      await addToCart(product._id)
-    } catch (err) {
-      console.error('Add to cart error:', err)
-      const message =
-        err.response?.data?.message || err.message || 'Failed to add product to cart.'
-      setError(message)
-    } finally {
-      setAddingToCart(false)
-    }
-  }
-
-  const handleToggleWishlist = async (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (saving) return
-
-    setSaving(true)
-    setError('')
-
-    try {
-      if (!isSaved) {
-        // Product is NOT saved -> Add to wishlist
-        const response = await axiosInstance.post(`wishlist/${product._id}`)
-        if (response.data && response.data.success) {
-          setIsSaved(true)
-          addToWishlistContext(product._id)
-        }
-      } else {
-        // Product IS saved -> Remove from wishlist
-        const response = await axiosInstance.delete(`wishlist/${product._id}`)
-        if (response.data && response.data.success) {
-          setIsSaved(false)
-          removeFromWishlistContext(product._id)
-        }
-      }
-    } catch (err) {
-      console.error('Wishlist toggle error:', err)
-      if (err.response && err.response.status === 409) {
-        setIsSaved(true)
-        addToWishlistContext(product._id)
-      } else if (err.response && err.response.status === 404) {
-        setIsSaved(false)
-        removeFromWishlistContext(product._id)
-      } else if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message)
-      } else {
-        setError(isSaved ? 'Failed to remove from wishlist.' : 'Failed to add to wishlist.')
-      }
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  return (
-    <div
-      key={product._id}
-      className="group bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition duration-200 flex flex-col justify-between"
-    >
-      {/* Card Top: Image & Badges */}
-      <div>
-        <div className="relative w-full h-52 bg-gray-100 overflow-hidden">
-          <img
-            src={product.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop'}
-            alt={product.name}
-            onError={(e) => {
-              e.target.onerror = null
-              e.target.src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600&auto=format&fit=crop'
-            }}
-            className="w-full h-full object-cover group-hover:scale-105 transition duration-300 ease-out"
-          />
-
-          {/* Category Badge */}
-          <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-semibold text-gray-700 shadow-sm border border-white/60">
-            {product.category || 'General'}
-          </span>
-
-          {/* Stock Status Badge */}
-          <span
-            className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[11px] font-semibold shadow-sm backdrop-blur-md ${
-              inStock
-                ? 'bg-emerald-500/90 text-white'
-                : 'bg-rose-500/90 text-white'
-            }`}
-          >
-            {inStock ? `In Stock (${product.stock})` : 'Out of Stock'}
-          </span>
-        </div>
-
-        {/* Card Body: Name & Price */}
-        <div className="p-5 space-y-2">
-          <h3
-            className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-blue-600 transition"
-            title={product.name}
-          >
-            {product.name}
-          </h3>
-
-          <div className="flex items-baseline justify-between pt-1">
-            <div>
-              <span className="text-xs text-gray-400">Price</span>
-              <p className="text-lg font-extrabold text-gray-900">
-                ₹{Number(product.price).toLocaleString()}
-              </p>
-            </div>
-            <span className="text-xs font-medium text-gray-400">
-              Qty: {product.stock}
-            </span>
-          </div>
-
-          {/* Error message if any */}
-          {error && (
-            <p className="text-xs text-rose-600 font-medium pt-1">
-              {error}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Card Bottom: Action Buttons */}
-      <div className="p-5 pt-0 space-y-2">
-        {/* Add to Cart Action Button */}
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          disabled={addingToCart || !inStock}
-          className={`w-full py-2.5 px-4 font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-1.5 shadow-sm border ${
-            !inStock
-              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-              : addingToCart
-              ? 'bg-blue-50 text-blue-500 border-blue-200 cursor-not-allowed'
-              : isInCart
-              ? 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 cursor-pointer active:scale-95'
-              : 'bg-blue-600 hover:bg-blue-700 text-white border-transparent cursor-pointer active:scale-95'
-          }`}
-        >
-          {addingToCart ? (
-            <>
-              <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-              </svg>
-              <span>Adding...</span>
-            </>
-          ) : !inStock ? (
-            <span>Out of Stock</span>
-          ) : isInCart ? (
-            <span>+ Add Another ({cartQuantity} in Cart)</span>
-          ) : (
-            <>
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>Add to Cart</span>
-            </>
-          )}
-        </button>
-
-        {/* Wishlist Toggle Action Button */}
-        <button
-          type="button"
-          onClick={handleToggleWishlist}
-          disabled={saving}
-          className={`w-full py-2.5 px-4 font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-1.5 shadow-sm border ${
-            saving
-              ? 'bg-slate-100 text-slate-500 border-slate-200 cursor-not-allowed'
-              : isSaved
-              ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200/90 cursor-pointer active:scale-95'
-              : 'bg-white text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border-slate-200/90 cursor-pointer active:scale-95'
-          }`}
-        >
-          <span>
-            {saving
-              ? '⏳ Updating...'
-              : isSaved
-              ? '♥ Remove from Wishlist'
-              : '♡ Add to Wishlist'}
-          </span>
-        </button>
-
-        {/* View Details Action Button */}
-        <Link
-          to={`/products/${product._id}`}
-          className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black text-white font-semibold text-xs rounded-xl transition duration-150 flex items-center justify-center gap-2 shadow-sm hover:shadow cursor-pointer active:scale-95"
-        >
-          <span>View Details</span>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </Link>
-      </div>
-
-    </div>
-  )
-}
+import ProductCard from '../components/ProductCard'
 
 function Products() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user: authUser, logout } = useAuth()
   const { wishlistCount, wishlistIds } = useWishlist()
   const { cartItems } = useCart()
@@ -247,8 +22,15 @@ function Products() {
 
   // Search, Category & Sort states
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('')
+  const [category, setCategory] = useState(searchParams.get('category') || '')
   const [sort, setSort] = useState('')
+
+  useEffect(() => {
+    const cat = searchParams.get('category')
+    if (cat) {
+      setCategory(cat)
+    }
+  }, [searchParams])
 
   const categories = [
     'All Categories',
@@ -492,7 +274,6 @@ function Products() {
               <ProductCard
                 key={product._id}
                 product={product}
-                initialSaved={wishlistIds.has(product._id)}
               />
             ))}
           </div>
