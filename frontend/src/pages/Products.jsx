@@ -348,12 +348,12 @@ function Products() {
             <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
               Products
             </Link>
-            <a href="#categories" className="hover:text-black transition">
-              Categories
-            </a>
-            <a href="#deals" className="hover:text-black transition">
-              Deals
-            </a>
+            <Link to="/wishlist" className="hover:text-black transition">
+              Wishlist
+            </Link>
+            <Link to="/cart" className="hover:text-black transition">
+              Cart ({cartCount})
+            </Link>
           </nav>
 
           {/* Right Controls */}
@@ -394,7 +394,8 @@ function Products() {
             </Link>
 
             {/* Shopping Cart Icon + Badge + Tooltip */}
-            <button
+            <Link
+              to="/cart"
               className="relative p-2 hover:bg-blue-50 text-gray-700 hover:text-blue-600 rounded-full transition cursor-pointer group"
               title="Cart"
               aria-label="Cart"
@@ -409,7 +410,7 @@ function Products() {
               <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
                 Cart ({cartCount})
               </span>
-            </button>
+            </Link>
 
           </div>
         </div>

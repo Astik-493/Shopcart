@@ -3,17 +3,23 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
 
 function ProductDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user: authUser, logout } = useAuth()
   const { wishlistCount } = useWishlist()
+  const { cartItems, addToCart } = useCart()
   const [customer, setCustomer] = useState(authUser || null)
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [quantity, setQuantity] = useState(1)
+  const [addingToCart, setAddingToCart] = useState(false)
+  const [cartSuccess, setCartSuccess] = useState('')
+
+  const cartCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0)
 
   // Fetch logged in customer profile if not in context
   useEffect(() => {
@@ -67,6 +73,21 @@ function ProductDetails() {
     }
   }
 
+  const handleAddToCartDetails = async () => {
+    if (!product || product.stock <= 0 || addingToCart) return
+    setAddingToCart(true)
+    setCartSuccess('')
+    try {
+      await addToCart(product._id)
+      setCartSuccess('Added to cart!')
+      setTimeout(() => setCartSuccess(''), 2500)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setAddingToCart(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 flex flex-col antialiased font-sans">
       
@@ -89,12 +110,12 @@ function ProductDetails() {
             <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
               Products
             </Link>
-            <a href="#categories" className="hover:text-black transition">
-              Categories
-            </a>
-            <a href="#deals" className="hover:text-black transition">
-              Deals
-            </a>
+            <Link to="/wishlist" className="hover:text-black transition">
+              Wishlist
+            </Link>
+            <Link to="/cart" className="hover:text-black transition">
+              Cart ({cartCount})
+            </Link>
           </nav>
 
           {/* Right Controls */}
@@ -134,13 +155,24 @@ function ProductDetails() {
               </span>
             </Link>
 
-            {/* Shopping Cart Icon */}
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer relative" title="Cart">
+            {/* Shopping Cart Icon + Badge + Tooltip */}
+            <Link
+              to="/cart"
+              className="relative p-2 hover:bg-blue-50 text-gray-700 hover:text-blue-600 rounded-full transition cursor-pointer group"
+              title="Cart"
+              aria-label="Cart"
+            >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full ring-2 ring-white" />
-            </button>
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                {cartCount}
+              </span>
+              {/* Hover Tooltip */}
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                Cart ({cartCount})
+              </span>
+            </Link>
 
           </div>
         </div>
@@ -322,17 +354,31 @@ function ProductDetails() {
                     </button>
                   </div>
 
-                  {/* Add to Cart Button (UI Only) */}
+                  {/* Add to Cart Button */}
                   <button
                     type="button"
-                    disabled={product.stock <= 0}
-                    onClick={() => alert(`Added ${quantity} x "${product.name}" to cart (UI Only)!`)}
+                    disabled={product.stock <= 0 || addingToCart}
+                    onClick={handleAddToCartDetails}
                     className="flex-1 py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-xl transition duration-150 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <span>Add to Cart</span>
+                    {addingToCart ? (
+                      <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span>Adding...</span>
+                      </>
+                    ) : cartSuccess ? (
+                      <span>✓ Added to Cart!</span>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span>Add to Cart</span>
+                      </>
+                    )}
                   </button>
                 </div>
 

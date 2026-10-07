@@ -67,18 +67,18 @@ function Home() {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-10 text-sm font-medium text-gray-600">
-            <Link to="/products" className="text-gray-900 font-semibold hover:text-black transition">
+            <Link to="/home" className="text-gray-900 font-semibold hover:text-black transition">
+              Home
+            </Link>
+            <Link to="/products" className="hover:text-black transition">
               Products
             </Link>
-            <a href="#new-arrivals" className="hover:text-black transition">
-              New Arrivals
-            </a>
-            <a href="#best-sellers" className="hover:text-black transition">
-              Best Sellers
-            </a>
-            <a href="#contact" className="hover:text-black transition">
-              Contact
-            </a>
+            <Link to="/wishlist" className="hover:text-black transition">
+              Wishlist
+            </Link>
+            <Link to="/cart" className="hover:text-black transition">
+              Cart ({cartCount})
+            </Link>
           </nav>
 
           {/* Right Controls */}
@@ -98,13 +98,6 @@ function Home() {
                 </button>
               </div>
             )}
-
-            {/* Profile Icon */}
-            <button className="p-2 hover:bg-gray-100 rounded-full transition text-gray-700 cursor-pointer" title="Profile">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </button>
 
             {/* Wishlist Heart Icon + Badge + Tooltip */}
             <Link
@@ -126,7 +119,8 @@ function Home() {
             </Link>
 
             {/* Shopping Cart Icon + Badge + Tooltip */}
-            <button
+            <Link
+              to="/cart"
               className="relative p-2 hover:bg-blue-50 text-gray-700 hover:text-blue-600 rounded-full transition cursor-pointer group"
               title="Cart"
               aria-label="Cart"
@@ -141,7 +135,7 @@ function Home() {
               <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-gray-900 text-white text-[10px] font-medium rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
                 Cart ({cartCount})
               </span>
-            </button>
+            </Link>
 
           </div>
         </div>

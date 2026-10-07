@@ -5,9 +5,9 @@ import { useAuth } from './AuthContext'
 const CartContext = createContext(null)
 
 export const CartProvider = ({ children }) => {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [cartItems, setCartItems] = useState([])
-  const [cartLoading, setCartLoading] = useState(false)
+  const [cartLoading, setCartLoading] = useState(true)
   const [cartError, setCartError] = useState(null)
 
   // Fetch current user's populated cart from backend
@@ -38,8 +38,10 @@ export const CartProvider = ({ children }) => {
     }
   }, [user])
 
-  // Refetch cart when user logs in or logs out
+  // Refetch cart when user logs in or out
   useEffect(() => {
+    if (authLoading) return
+
     if (user) {
       refreshCart()
     } else {
@@ -47,7 +49,7 @@ export const CartProvider = ({ children }) => {
       setCartLoading(false)
       setCartError(null)
     }
-  }, [user, refreshCart])
+  }, [user, authLoading, refreshCart])
 
   // Add a product to cart
   const addToCart = async (productId) => {
