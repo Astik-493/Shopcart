@@ -124,3 +124,39 @@ export const createPaymentOrder = async (req, res) => {
         })
     }
 }
+
+export const getOrderById = async (req, res) => {
+    try {
+        const { id } = req.params
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid order ID"
+            })
+        }
+
+        const order = await Order.findOne({
+            _id: id,
+            user: req.user._id
+        })
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            order
+        })
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        })
+    }
+}
+

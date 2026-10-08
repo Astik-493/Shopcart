@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import Navbar from '../components/Navbar'
@@ -19,7 +20,8 @@ function Checkout() {
   })
 
   const [errors, setErrors] = useState({})
-  const [orderSuccess, setOrderSuccess] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [serverError, setServerError] = useState('')
 
   // Handle form field change and clear field-level error
   const handleChange = (e) => {
@@ -34,6 +36,7 @@ function Checkout() {
         [name]: ''
       }))
     }
+    if (serverError) setServerError('')
   }
 
   // Calculate cart totals dynamically from cart items
@@ -97,17 +100,45 @@ function Checkout() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setServerError('')
 
     const isValid = validateForm()
     if (!isValid) {
-      // Prevent submission if validation fails
+      // Prevent submission if client-side validation fails
       return
     }
 
-    // Validation passed
-    setOrderSuccess(true)
+    setSubmitting(true)
+    try {
+      const response = await axiosInstance.post('orders/create-payment-order', {
+        shippingAddress: {
+          fullName: shippingDetails.fullName.trim(),
+          phone: shippingDetails.phone.trim(),
+          address: shippingDetails.address.trim(),
+          addressLine1: shippingDetails.address.trim(),
+          city: shippingDetails.city.trim(),
+          state: shippingDetails.state.trim(),
+          pincode: shippingDetails.pincode.trim()
+        }
+      })
+
+      if (response.data?.order?._id) {
+        // Navigate to dedicated Order Success confirmation page
+        navigate(`/order-success/${response.data.order._id}`, {
+          state: { order: response.data.order }
+        })
+      } else {
+        setServerError('Order created but no order confirmation was returned.')
+      }
+    } catch (err) {
+      const message =
+        err.response?.data?.message || err.message || 'Failed to place order. Please try again.'
+      setServerError(message)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -142,7 +173,19 @@ function Checkout() {
           </Link>
         </div>
 
-        {/* Loading State */}
+        {/* Global Server Error Alert if any */}
+        {serverError && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-2xl text-xs font-medium flex items-center justify-between shadow-sm animate-in fade-in duration-200">
+            <span>⚠️ {serverError}</span>
+            <button
+              type="button"
+              onClick={() => setServerError('')}
+              className="text-rose-500 hover:text-rose-700 font-bold ml-3 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         {cartLoading && cartItems.length === 0 && (
           <div className="min-h-[350px] flex items-center justify-center bg-white rounded-3xl border border-gray-200/80 p-12 shadow-sm">
             <div className="text-center">
@@ -448,12 +491,22 @@ function Checkout() {
                 {/* Place Order Button */}
                 <button
                   type="submit"
-                  className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs rounded-xl transition duration-150 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+                  disabled={submitting}
+                  className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs rounded-xl transition duration-150 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer active:scale-[0.99]"
                 >
-                  <span>Place Order</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Placing Order...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Place Order</span>
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </>
+                  )}
                 </button>
 
                 <p className="text-[11px] text-gray-400 text-center flex items-center justify-center gap-1.5 pt-1">
