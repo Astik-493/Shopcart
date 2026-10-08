@@ -49,24 +49,24 @@ function Login() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden font-sans">
       
-      {/* Background glowing ambiance */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-[128px] pointer-events-none" />
+      {/* Background ambiance */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       {/* Main Container */}
-      <div className="relative z-10 w-full max-w-5xl bg-slate-900/90 backdrop-blur-2xl rounded-3xl border border-slate-800 shadow-2xl shadow-black/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
+      <div className="relative z-10 w-full max-w-5xl bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl shadow-black/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
         
         {/* Left Side: Brand & Showcase Showcase Panel */}
         <div className="lg:col-span-5 bg-gradient-to-br from-blue-900/50 via-slate-900/80 to-slate-950 p-8 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 relative overflow-hidden">
           
           {/* Subtle decoration elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-10 left-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute bottom-10 left-10 w-48 h-48 bg-indigo-500/10 rounded-full blur-xl pointer-events-none" />
 
           {/* Top Brand Header */}
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold tracking-wide uppercase mb-6 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold tracking-wide uppercase mb-6">
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
               Shopkart Premium
             </div>
@@ -85,7 +85,7 @@ function Login() {
 
           {/* Feature Highlights */}
           <div className="my-8 space-y-4 relative z-10">
-            <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm transition hover:bg-slate-800/70">
+            <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 transition hover:bg-slate-800/80">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -97,7 +97,7 @@ function Login() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm transition hover:bg-slate-800/70">
+            <div className="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50 transition hover:bg-slate-800/80">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -111,7 +111,7 @@ function Login() {
           </div>
 
           {/* Social Proof Quote Widget */}
-          <div className="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 backdrop-blur-md relative z-10">
+          <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60 relative z-10">
             <div className="flex items-center gap-1 text-amber-400 mb-2">
               {[...Array(5)].map((_, i) => (
                 <svg key={i} className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">

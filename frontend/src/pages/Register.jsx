@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 
@@ -16,12 +16,13 @@ function Register() {
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
     if (error) setError('')
   }
 
-  // Calculate password strength
-  const getPasswordStrength = (pass) => {
+  // Calculate password strength memoized
+  const passStrength = useMemo(() => {
+    const pass = formData.password
     if (!pass) return { score: 0, label: '', color: 'bg-slate-200' }
     let score = 0
     if (pass.length >= 6) score += 1
@@ -32,9 +33,7 @@ function Register() {
     if (score <= 1) return { score: 1, label: 'Weak', color: 'bg-rose-500', text: 'text-rose-500' }
     if (score <= 3) return { score: 2, label: 'Medium', color: 'bg-amber-500', text: 'text-amber-500' }
     return { score: 3, label: 'Strong', color: 'bg-emerald-500', text: 'text-emerald-500' }
-  }
-
-  const passStrength = getPasswordStrength(formData.password)
+  }, [formData.password])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -92,24 +91,24 @@ function Register() {
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 sm:p-6 lg:p-10 relative overflow-hidden font-sans">
       
-      {/* Background glowing ambiance */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-[128px] pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-[128px] pointer-events-none" />
+      {/* Background ambiance */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       {/* Main Split-Screen Container */}
-      <div className="relative z-10 w-full max-w-5xl bg-slate-900/90 backdrop-blur-2xl rounded-3xl border border-slate-800 shadow-2xl shadow-black/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
+      <div className="relative z-10 w-full max-w-5xl bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl shadow-black/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
         
         {/* Left Side: Brand Showcase Panel */}
         <div className="lg:col-span-5 bg-gradient-to-br from-indigo-900/50 via-slate-900/80 to-slate-950 p-8 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800/80 relative overflow-hidden">
           
           {/* Ambient light spots */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-10 left-10 w-48 h-48 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute bottom-10 left-10 w-48 h-48 bg-purple-500/10 rounded-full blur-xl pointer-events-none" />
 
           {/* Header & Badges */}
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold tracking-wide uppercase mb-6 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold tracking-wide uppercase mb-6">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Join 50k+ Happy Customers
             </div>
@@ -128,7 +127,7 @@ function Register() {
 
           {/* Perks list */}
           <div className="my-8 space-y-3.5 relative z-10">
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50">
               <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
                 <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -140,7 +139,7 @@ function Register() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50">
               <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
                 <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -152,7 +151,7 @@ function Register() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/60 border border-slate-700/50">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                 <svg className="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

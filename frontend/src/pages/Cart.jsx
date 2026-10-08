@@ -374,10 +374,10 @@ function Cart() {
                   </span>
                 </div>
 
-                {/* Proceed to Checkout Button (UI Only) */}
+                {/* Proceed to Checkout Button */}
                 <button
                   type="button"
-                  onClick={() => alert(`Proceeding to checkout with ${totalUnits} item(s) totaling ₹${subtotal.toLocaleString()} (UI Only)!`)}
+                  onClick={() => navigate('/checkout')}
                   className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs rounded-xl transition duration-150 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                 >
                   <span>Proceed to Checkout</span>

@@ -97,7 +97,6 @@ export const removeFromWishlist = async (req, res) => {
             })
         }
 
-        // Get authenticated user from middleware
         const customer = req.user
 
         // Check whether the product exists in the user's wishlist
