@@ -42,6 +42,10 @@ const shippingAddressSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    addressLine1: {
+        type: String,
+        trim: true
+    },
     city: {
         type: String,
         required: true,
