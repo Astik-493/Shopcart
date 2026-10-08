@@ -18,15 +18,22 @@ function Checkout() {
     pincode: ''
   })
 
-  const [submitted, setSubmitted] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [orderSuccess, setOrderSuccess] = useState(false)
 
-  // Handle form field change
+  // Handle form field change and clear field-level error
   const handleChange = (e) => {
     const { name, value } = e.target
     setShippingDetails((prev) => ({
       ...prev,
       [name]: value
     }))
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
   }
 
   // Calculate cart totals dynamically from cart items
@@ -37,9 +44,70 @@ function Checkout() {
     return acc + price * qty
   }, 0)
 
+  // Validate form fields
+  const validateForm = () => {
+    const newErrors = {}
+
+    const trimmedFullName = shippingDetails.fullName.trim()
+    const trimmedPhone = shippingDetails.phone.trim()
+    const trimmedAddress = shippingDetails.address.trim()
+    const trimmedCity = shippingDetails.city.trim()
+    const trimmedState = shippingDetails.state.trim()
+    const trimmedPincode = shippingDetails.pincode.trim()
+
+    // Full Name
+    if (!trimmedFullName) {
+      newErrors.fullName = 'Full Name is required.'
+    }
+
+    // Phone
+    if (!trimmedPhone) {
+      newErrors.phone = 'Phone Number is required.'
+    } else {
+      const digitsOnly = trimmedPhone.replace(/\D/g, '')
+      const isValidPhoneFormat = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/.test(trimmedPhone)
+      if (!isValidPhoneFormat || digitsOnly.length < 10 || digitsOnly.length > 15) {
+        newErrors.phone = 'Please enter a valid phone number (at least 10 digits).'
+      }
+    }
+
+    // Address
+    if (!trimmedAddress) {
+      newErrors.address = 'Address Line is required.'
+    }
+
+    // City
+    if (!trimmedCity) {
+      newErrors.city = 'City is required.'
+    }
+
+    // State
+    if (!trimmedState) {
+      newErrors.state = 'State is required.'
+    }
+
+    // Pincode
+    if (!trimmedPincode) {
+      newErrors.pincode = 'Pincode is required.'
+    } else if (!/^\d{6}$/.test(trimmedPincode)) {
+      newErrors.pincode = 'Pincode must contain 6 digits.'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
-    setSubmitted(true)
+
+    const isValid = validateForm()
+    if (!isValid) {
+      // Prevent submission if validation fails
+      return
+    }
+
+    // Validation passed
+    setOrderSuccess(true)
   }
 
   return (
@@ -105,9 +173,22 @@ function Checkout() {
           </div>
         )}
 
+        {/* Order Success Notice */}
+        {orderSuccess && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in duration-200 shadow-sm">
+            <svg className="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <p className="font-semibold text-sm">Shipping information validated successfully!</p>
+              <p className="text-xs text-emerald-600 mt-0.5">Ready for order placement flow.</p>
+            </div>
+          </div>
+        )}
+
         {/* Checkout Main Form & Order Summary */}
         {cartItems.length > 0 && (
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Left Column: Shipping Details */}
             <div className="lg:col-span-7 space-y-6">
@@ -136,46 +217,70 @@ function Checkout() {
                         type="text"
                         id="fullName"
                         name="fullName"
-                        required
                         placeholder="John Doe"
                         value={shippingDetails.fullName}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-slate-50/70 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"
+                        className={`w-full px-4 py-2.5 border rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none transition ${
+                          errors.fullName
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-4 focus:ring-rose-100'
+                            : 'border-gray-200 bg-slate-50/70 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100'
+                        }`}
                       />
+                      {errors.fullName && (
+                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                          <span>⚠️</span> {errors.fullName}
+                        </p>
+                      )}
                     </div>
 
                     <div>
                       <label htmlFor="phone" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                        Phone <span className="text-rose-500">*</span>
+                        Phone Number <span className="text-rose-500">*</span>
                       </label>
                       <input
                         type="tel"
                         id="phone"
                         name="phone"
-                        required
                         placeholder="+91 9876543210"
                         value={shippingDetails.phone}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-slate-50/70 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"
+                        className={`w-full px-4 py-2.5 border rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none transition ${
+                          errors.phone
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-4 focus:ring-rose-100'
+                            : 'border-gray-200 bg-slate-50/70 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100'
+                        }`}
                       />
+                      {errors.phone && (
+                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                          <span>⚠️</span> {errors.phone}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  {/* Address */}
+                  {/* Address Line */}
                   <div>
                     <label htmlFor="address" className="block text-xs font-semibold text-gray-700 mb-1.5">
-                      Address <span className="text-rose-500">*</span>
+                      Address Line <span className="text-rose-500">*</span>
                     </label>
                     <textarea
                       id="address"
                       name="address"
-                      required
                       rows={3}
                       placeholder="Street address, Apartment, Suite, Landmark..."
                       value={shippingDetails.address}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 bg-slate-50/70 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition resize-none"
+                      className={`w-full px-4 py-2.5 border rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none transition resize-none ${
+                        errors.address
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-4 focus:ring-rose-100'
+                          : 'border-gray-200 bg-slate-50/70 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100'
+                      }`}
                     />
+                    {errors.address && (
+                      <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                        <span>⚠️</span> {errors.address}
+                      </p>
+                    )}
                   </div>
 
                   {/* City, State & Pincode Row */}
@@ -188,12 +293,20 @@ function Checkout() {
                         type="text"
                         id="city"
                         name="city"
-                        required
                         placeholder="Mumbai"
                         value={shippingDetails.city}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-slate-50/70 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"
+                        className={`w-full px-4 py-2.5 border rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none transition ${
+                          errors.city
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-4 focus:ring-rose-100'
+                            : 'border-gray-200 bg-slate-50/70 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100'
+                        }`}
                       />
+                      {errors.city && (
+                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                          <span>⚠️</span> {errors.city}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -204,12 +317,20 @@ function Checkout() {
                         type="text"
                         id="state"
                         name="state"
-                        required
                         placeholder="Maharashtra"
                         value={shippingDetails.state}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-slate-50/70 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"
+                        className={`w-full px-4 py-2.5 border rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none transition ${
+                          errors.state
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-4 focus:ring-rose-100'
+                            : 'border-gray-200 bg-slate-50/70 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100'
+                        }`}
                       />
+                      {errors.state && (
+                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                          <span>⚠️</span> {errors.state}
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -220,12 +341,20 @@ function Checkout() {
                         type="text"
                         id="pincode"
                         name="pincode"
-                        required
                         placeholder="400001"
                         value={shippingDetails.pincode}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-slate-50/70 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"
+                        className={`w-full px-4 py-2.5 border rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none transition ${
+                          errors.pincode
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:ring-4 focus:ring-rose-100'
+                            : 'border-gray-200 bg-slate-50/70 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100'
+                        }`}
                       />
+                      {errors.pincode && (
+                        <p className="text-rose-500 text-xs mt-1.5 flex items-center gap-1">
+                          <span>⚠️</span> {errors.pincode}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
