@@ -14,6 +14,7 @@ import Wishlist from './pages/Wishlist'
 import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import OrderSuccess from './pages/OrderSuccess'
+import Orders from './pages/Orders'
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-success/:id" element={<OrderSuccess />} />
+                <Route path="/orders" element={<Orders />} />
               </Route>
 
               {/* Fallback route */}

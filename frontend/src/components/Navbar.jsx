@@ -55,23 +55,24 @@ function Navbar() {
 
   const isHomeActive = location.pathname === '/' || location.pathname === '/home'
   const isProductsActive = location.pathname === '/products'
+  const isOrdersActive = location.pathname === '/orders'
 
   return (
     <header className="w-full bg-white/95 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-50 shadow-2xs transition duration-200">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
         
         {/* Left Section: Brand Logo & Main Navigation Links */}
-        <div className="flex items-center space-x-6 sm:space-x-8 shrink-0">
-          <Link to="/home" className="flex items-center gap-2 group">
-            <span className="text-2xl font-bold tracking-tight text-gray-900 font-serif group-hover:text-blue-600 transition">
+        <div className="flex items-center space-x-3 sm:space-x-6 shrink-0 min-w-0">
+          <Link to="/home" className="flex items-center gap-2 group shrink-0">
+            <span className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 font-serif group-hover:text-blue-600 transition">
               Shopkart
             </span>
           </Link>
 
-          <nav className="flex items-center space-x-1 sm:space-x-2 text-sm font-medium">
+          <nav className="flex items-center space-x-1 text-xs sm:text-sm font-medium">
             <Link
               to="/home"
-              className={`px-3 py-1.5 rounded-xl transition ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition ${
                 isHomeActive
                   ? 'text-gray-900 font-bold bg-gray-100/90 shadow-2xs'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -81,7 +82,7 @@ function Navbar() {
             </Link>
             <Link
               to="/products"
-              className={`px-3 py-1.5 rounded-xl transition ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition ${
                 isProductsActive
                   ? 'text-gray-900 font-bold bg-gray-100/90 shadow-2xs'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -89,22 +90,21 @@ function Navbar() {
             >
               Products
             </Link>
+            <Link
+              to="/orders"
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl transition ${
+                isOrdersActive
+                  ? 'text-blue-700 font-bold bg-blue-50 shadow-2xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              My Orders
+            </Link>
           </nav>
         </div>
 
         {/* Middle Section: Clean, Compact Quick Links */}
-        <div className="hidden md:flex items-center space-x-1 lg:space-x-2 text-xs font-medium text-gray-600">
-          <Link
-            to="/home"
-            className="px-2.5 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-100 transition duration-150 flex items-center gap-1.5 group"
-            title="Curated for You"
-          >
-            <span className="text-blue-600 group-hover:rotate-12 transition-transform duration-300">✦</span>
-            <span>Curated for You</span>
-          </Link>
-
-          <span className="text-gray-300 select-none">•</span>
-
+        <div className="hidden lg:flex items-center space-x-1 lg:space-x-2 text-xs font-medium text-gray-600">
           <Link
             to="/products"
             className="px-2.5 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-100 transition duration-150"
@@ -137,7 +137,7 @@ function Navbar() {
         </div>
 
         {/* Right Section: Account Dropdown, Wishlist Icon, Cart Icon */}
-        <div className="flex items-center space-x-2.5 sm:space-x-3.5 shrink-0">
+        <div className="flex items-center space-x-2 sm:space-x-3.5 shrink-0">
           
           {/* Account Dropdown */}
           {user ? (
@@ -193,7 +193,7 @@ function Navbar() {
                     </div>
                   </div>
 
-                  <div className="pt-2 px-3 border-t border-gray-100">
+                  <div className="pt-2 px-3 border-t border-gray-100 space-y-1.5">
                     <button
                       type="button"
                       onClick={handleLogout}
