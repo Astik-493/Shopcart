@@ -55,7 +55,7 @@ function Home() {
       <Navbar />
 
       {/* Main Content Area */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-16">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full min-w-0 space-y-16">
         
         {/* 1. HERO SECTION */}
         <section className="bg-gradient-to-br from-neutral-100 to-neutral-200/90 rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-2 items-center min-h-[420px] shadow-sm border border-neutral-200/70">
