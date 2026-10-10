@@ -83,10 +83,21 @@ const orderSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    orderStatus: {
+    status: {
         type: String,
-        enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
-        default: 'Pending'
+        enum: ["PENDING_PAYMENT", "PLACED", "CONFIRMED", "SHIPPED", "DELIVERED"],
+        default: "PENDING_PAYMENT"
+    },
+    paymentStatus: {
+        type: String,
+        enum: ["PENDING", "PAID", "FAILED"],
+        default: "PENDING"
+    },
+    razorpayOrderId: {
+        type: String
+    },
+    razorpayPaymentId: {
+        type: String
     }
 }, {
     timestamps: true

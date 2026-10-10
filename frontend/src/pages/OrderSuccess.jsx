@@ -3,6 +3,43 @@ import { useParams, Link, useLocation } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import Navbar from '../components/Navbar'
 
+const getOrderStatusInfo = (status) => {
+  if (!status) return { label: 'Pending', className: 'bg-amber-50 text-amber-700 border-amber-200' }
+  const upper = String(status).toUpperCase()
+  switch (upper) {
+    case 'PLACED':
+      return { label: 'Placed', className: 'bg-blue-50 text-blue-700 border-blue-200' }
+    case 'CONFIRMED':
+      return { label: 'Confirmed', className: 'bg-indigo-50 text-indigo-700 border-indigo-200' }
+    case 'SHIPPED':
+      return { label: 'Shipped', className: 'bg-purple-50 text-purple-700 border-purple-200' }
+    case 'DELIVERED':
+      return { label: 'Delivered', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    case 'PENDING_PAYMENT':
+    case 'PENDING':
+      return { label: 'Pending Payment', className: 'bg-amber-50 text-amber-700 border-amber-200' }
+    case 'CANCELLED':
+      return { label: 'Cancelled', className: 'bg-rose-50 text-rose-700 border-rose-200' }
+    default:
+      return { label: status, className: 'bg-gray-50 text-gray-700 border-gray-200' }
+  }
+}
+
+const getPaymentStatusInfo = (paymentStatus) => {
+  if (!paymentStatus) return null
+  const upper = String(paymentStatus).toUpperCase()
+  switch (upper) {
+    case 'PAID':
+      return { label: 'Paid', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    case 'PENDING':
+      return { label: 'Pending', className: 'bg-amber-50 text-amber-700 border-amber-200' }
+    case 'FAILED':
+      return { label: 'Failed', className: 'bg-rose-50 text-rose-700 border-rose-200' }
+    default:
+      return { label: paymentStatus, className: 'bg-gray-50 text-gray-700 border-gray-200' }
+  }
+}
+
 function OrderSuccess() {
   const { id } = useParams()
   const location = useLocation()
@@ -36,6 +73,9 @@ function OrderSuccess() {
       fetchOrder()
     }
   }, [id, order])
+
+  const orderStatusInfo = getOrderStatusInfo(order?.status || order?.orderStatus)
+  const paymentStatusInfo = getPaymentStatusInfo(order?.paymentStatus)
 
   return (
     <div className="min-h-screen bg-slate-50 text-gray-900 flex flex-col antialiased font-sans">
@@ -102,7 +142,7 @@ function OrderSuccess() {
               {/* Action Buttons */}
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
-                  to="/home"
+                  to="/orders"
                   className="w-full sm:w-auto px-6 py-3 bg-slate-900 hover:bg-black text-white font-semibold text-xs rounded-xl transition shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -142,10 +182,19 @@ function OrderSuccess() {
 
                   <div>
                     <span className="text-gray-400 block text-[11px] font-medium uppercase">Order Status</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 mt-1">
-                      {order.orderStatus || 'Pending'}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border mt-1 ${orderStatusInfo.className}`}>
+                      {orderStatusInfo.label}
                     </span>
                   </div>
+
+                  {paymentStatusInfo && (
+                    <div>
+                      <span className="text-gray-400 block text-[11px] font-medium uppercase">Payment Status</span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border mt-1 ${paymentStatusInfo.className}`}>
+                        {paymentStatusInfo.label}
+                      </span>
+                    </div>
+                  )}
 
                   <div>
                     <span className="text-gray-400 block text-[11px] font-medium uppercase">Date Placed</span>

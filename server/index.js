@@ -1,14 +1,14 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import express from 'express'
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
 import customerRoutes from './routes/customer.routes.js'
 import productRoutes from './routes/product.routes.js'
 import wishlistRoutes from './routes/wishlist.routes.js'
 import cartRoutes from './routes/cart.routes.js'
 import orderRoutes from './routes/order.routes.js'
 import cookieParser from 'cookie-parser'
-
-dotenv.config()
 
 const app = express()
 const PORT = 8001

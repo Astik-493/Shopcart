@@ -1,14 +1,30 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { axiosInstance } from '../axiosCalls/axios'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import Navbar from '../components/Navbar'
 
+// Helper to dynamically load the Razorpay checkout script
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true)
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
+
 function Checkout() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { cartItems, cartLoading } = useCart()
+  const { cartItems, cartLoading, refreshCart } = useCart()
 
   const [shippingDetails, setShippingDetails] = useState({
     fullName: user?.fullName || '',
@@ -22,6 +38,7 @@ function Checkout() {
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
+  const verifyingRef = useRef(false)
 
   // Handle form field change and clear field-level error
   const handleChange = (e) => {
@@ -103,6 +120,7 @@ function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setServerError('')
+    verifyingRef.current = false
 
     const isValid = validateForm()
     if (!isValid) {
@@ -112,31 +130,119 @@ function Checkout() {
 
     setSubmitting(true)
     try {
+      // 1. Dynamically load Razorpay SDK
+      const isLoaded = await loadRazorpayScript()
+      if (!isLoaded || !window.Razorpay) {
+        setServerError('Unable to load Razorpay payment SDK. Please check your internet connection and try again.')
+        setSubmitting(false)
+        return
+      }
+
+      // 2. Call backend order creation endpoint with validated shipping address
       const response = await axiosInstance.post('orders/create-payment-order', {
         shippingAddress: {
           fullName: shippingDetails.fullName.trim(),
           phone: shippingDetails.phone.trim(),
           address: shippingDetails.address.trim(),
-          addressLine1: shippingDetails.address.trim(),
           city: shippingDetails.city.trim(),
           state: shippingDetails.state.trim(),
           pincode: shippingDetails.pincode.trim()
         }
       })
 
-      if (response.data?.order?._id) {
-        // Navigate to dedicated Order Success confirmation page
-        navigate(`/order-success/${response.data.order._id}`, {
-          state: { order: response.data.order }
-        })
-      } else {
-        setServerError('Order created but no order confirmation was returned.')
+      const { shopKartOrderId, razorpayOrderId, amount, currency, key } = response.data || {}
+
+      if (!key || !razorpayOrderId || !amount) {
+        setServerError('Payment order creation failed. Missing payment initialization details.')
+        setSubmitting(false)
+        return
       }
+
+      // 3. Configure Razorpay Standard Checkout options
+      const options = {
+        key: key,
+        amount: amount,
+        currency: currency || 'INR',
+        name: 'Shopkart',
+        description: `Order #${shopKartOrderId || razorpayOrderId} - Shopkart Purchase`,
+        order_id: razorpayOrderId,
+        prefill: {
+          name: shippingDetails.fullName.trim() || user?.fullName || '',
+          email: user?.email || '',
+          contact: shippingDetails.phone.trim() || user?.phone || ''
+        },
+        theme: {
+          color: '#2563eb'
+        },
+        handler: async function (razorpayResponse) {
+          // Collect Razorpay payment identifiers
+          const paymentResult = {
+            shopKartOrderId: shopKartOrderId,
+            razorpay_order_id: razorpayResponse.razorpay_order_id,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature
+          }
+
+          // Prevent duplicate verification requests
+          if (verifyingRef.current) return
+          verifyingRef.current = true
+          setSubmitting(true)
+          setServerError('')
+
+          try {
+            // Send verification request to backend
+            const verifyRes = await axiosInstance.post('api/orders/verify-payment', paymentResult)
+
+            if (verifyRes.data?.success) {
+              // Refresh cart from backend to sync cleared cart state
+              await refreshCart()
+
+              // Navigate to dedicated Order Success confirmation page
+              navigate(`/order-success/${shopKartOrderId}`, {
+                state: { order: verifyRes.data.order }
+              })
+            } else {
+              setServerError(verifyRes.data?.message || 'Payment verification failed.')
+              verifyingRef.current = false
+              setSubmitting(false)
+            }
+          } catch (verifyErr) {
+            console.error('Payment verification error:', verifyErr)
+            const errorMsg =
+              verifyErr.response?.data?.message ||
+              verifyErr.message ||
+              'Payment verification failed. Please contact support.'
+            setServerError(errorMsg)
+            verifyingRef.current = false
+            setSubmitting(false)
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            if (!verifyingRef.current) {
+              setSubmitting(false)
+            }
+          }
+        }
+      }
+
+      const rzp = new window.Razorpay(options)
+
+      rzp.on('payment.failed', function (paymentError) {
+        console.error('Razorpay payment failed:', paymentError.error)
+        const failureMessage =
+          paymentError.error?.description || paymentError.error?.reason || 'Payment failed or was cancelled.'
+        setServerError(`Payment Failed: ${failureMessage}`)
+        verifyingRef.current = false
+        setSubmitting(false)
+      })
+
+      rzp.open()
     } catch (err) {
       const message =
         err.response?.data?.message || err.message || 'Failed to place order. Please try again.'
       setServerError(message)
-    } finally {
+      verifyingRef.current = false
       setSubmitting(false)
     }
   }
@@ -213,19 +319,6 @@ function Checkout() {
             >
               <span>Browse Products</span>
             </Link>
-          </div>
-        )}
-
-        {/* Order Success Notice */}
-        {orderSuccess && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in duration-200 shadow-sm">
-            <svg className="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <p className="font-semibold text-sm">Shipping information validated successfully!</p>
-              <p className="text-xs text-emerald-600 mt-0.5">Ready for order placement flow.</p>
-            </div>
           </div>
         )}
 
